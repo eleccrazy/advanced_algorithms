@@ -180,10 +180,146 @@ def process_tree_component(tree: list, graph: dict, shares: list) -> tuple:
 
 
 def process_cycle_component(component: list, graph: dict, shares: list) -> tuple:
-    return 0, []
+    """
+    Process a cyclic component by simulating breaking the cycle into two configurations.
+
+    Parameters:
+        component (list): List of nodes in the cycle component.
+        graph (dict): Adjacency list representation of the directed graph.
+        shares (list): List of integers representing the shares.
+
+    Returns:
+        tuple: Maximum shares and the list of selected shareholders.
+    """
+    # Step 1: Detect cycle nodes
+    cycle_nodes = detect_cycle_nodes(component, graph)
+
+    # Step 2: Choose a representative node
+    representative_node = cycle_nodes[0]
+
+    # Configuration 1: Include the representative node
+    forest_include = remove_node_and_neighbors(representative_node, component, graph)
+    max_include, shareholders_include = process_forest(forest_include, graph, shares)
+
+    # Add the representative node's share
+    max_include += shares[representative_node]
+    shareholders_include.append(representative_node)
+
+    # Configuration 2: Exclude the representative node
+    forest_exclude = remove_node(representative_node, component)
+    max_exclude, shareholders_exclude = process_forest(forest_exclude, graph, shares)
+
+    # Compare results
+    if max_include > max_exclude:
+        return max_include, shareholders_include
+    else:
+        return max_exclude, shareholders_exclude
 
 
-def max_independent_set(shares: list, edges: list) -> tuple:
+def detect_cycle_nodes(component: list, graph: dict) -> list:
+    """
+    Detect all nodes in a cycle within the component.
+
+    Parameters:
+        component (list): List of nodes in the component.
+        graph (dict): Adjacency list representation of the graph.
+
+    Returns:
+        list: List of nodes that are part of the cycle.
+    """
+    visited = set()
+    stack = set()
+    cycle_nodes = set()
+
+    def dfs(node, parent):
+        visited.add(node)
+        stack.add(node)
+        for neighbor in graph[node]:
+            if neighbor in component:
+                if neighbor not in visited:
+                    dfs(neighbor, node)
+                elif neighbor != parent and neighbor in stack:
+                    cycle_nodes.update(stack)
+        stack.remove(node)
+
+    for node in component:
+        if node not in visited:
+            dfs(node, None)
+
+    return list(cycle_nodes)
+
+
+def remove_node_and_neighbors(node: int, component: list, graph: dict) -> list:
+    """
+    Remove a node and its neighbors from the component.
+
+    Parameters:
+        node (int): The node to remove.
+        component (list): List of nodes in the component.
+        graph (dict): Adjacency list representation of the graph.
+
+    Returns:
+        list: A list of smaller components (forests or trees).
+    """
+    removed_nodes = set([node] + graph[node])  # Remove node and its neighbors
+    return [n for n in component if n not in removed_nodes]
+
+
+def remove_node(node: int, component: list) -> list:
+    """
+    Remove a single node from the component.
+
+    Parameters:
+        node (int): The node to remove.
+        component (list): List of nodes in the component.
+        graph (dict): Adjacency list representation of the graph.
+
+    Returns:
+        list: A list of smaller components (forests or trees).
+    """
+    return [n for n in component if n != node]
+
+
+def process_forest(forest: list, graph: dict, shares: list) -> tuple:
+    """
+    Process a forest (list of disconnected tree components).
+
+    Parameters:
+        forest (list): List of nodes in the forest.
+        graph (dict): Adjacency list representation of the graph.
+        shares (list): List of integers representing the shares.
+
+    Returns:
+        tuple: Maximum shares and the list of selected shareholders.
+    """
+    total_max_shares = 0
+    total_shareholders = []
+    visited = set()
+
+    def dfs_tree(root):
+        tree = []
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            if node not in visited:
+                visited.add(node)
+                tree.append(node)
+                for child in graph[node]:
+                    if child not in visited and child in forest:
+                        stack.append(child)
+        return tree
+
+    for node in forest:
+        if node not in visited:
+            tree = dfs_tree(node)
+            max_shares, shareholders = process_tree_component(tree, graph, shares)
+            total_max_shares += max_shares
+            total_shareholders.extend(shareholders)
+
+    return total_max_shares, total_shareholders
+
+
+def find_max_shares(shares: list, edges: list) -> tuple:
     """
     Find the maximum shares that can be selected by independent shareholders.
 
@@ -202,13 +338,15 @@ def max_independent_set(shares: list, edges: list) -> tuple:
     for component in components:
         if detect_cycle(component, graph):
             max_shares, shareholders = process_cycle_component(component, graph, shares)
-            pass
         else:
             max_shares, shareholders = process_tree_component(component, graph, shares)
-            print(max_shares, shareholders)
 
         total_max_shares += max_shares
         selected_shareholders.extend(shareholders)
+
+        selected_shareholders.sort() # Sort the selected shareholders
+        # Convert the selected shareholders to 1-based indexing
+        selected_shareholders = [shareholder + 1 for shareholder in selected_shareholders]
 
     return total_max_shares, selected_shareholders
 
@@ -218,17 +356,17 @@ def main():
     # Example usage
     shares = [10, 20, 30, 40, 50, 60]
     edges = [(1, 0), (2, 0), (3, 2), (4, 2), (5, 4)]
-    max_independent_set(shares, edges)
+    print(find_max_shares(shares, edges)) # Result: (120, [1, 3, 5])
 
     # Another example
     shares = [10, 20, 30, 40, 50, 60, 70]
     edges = [(1, 0), (2, 3), (3, 4), (4, 5), (5, 2), (6, 2)]
-    max_independent_set(shares, edges)
+    print(find_max_shares(shares, edges)) # Result: (190, [1, 3, 5, 6])
 
     # Another example
     shares = [10, 20, 30, 40, 50, 60, 70, 80, 90]
     edges = [(1, 0), (2, 3), (3, 4), (4, 5), (5, 2), (6, 2), (7, 6), (8, 6)]
-    max_independent_set(shares, edges)
+    print(find_max_shares(shares, edges)) # Result: (290, [1, 3, 5, 7, 8])
 
 
 if __name__ == "__main__":
