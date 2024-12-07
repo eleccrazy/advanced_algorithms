@@ -351,13 +351,63 @@ def find_max_shares(shares: list, edges: list) -> tuple:
     return total_max_shares, selected_shareholders
 
 
+def read_input_from_file(file_path: str) -> tuple:
+    """
+    Reads input from a file and converts it into shares and edges for further processing.
+
+    Parameters:
+        file_path (str): Path to the input file.
+
+    Returns:
+        tuple: A list of shares and a list of edges.
+    """
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    # First line contains the number of shareholders (not directly used here)
+    n = int(lines[0].strip())
+
+    shares = []  # List to store the shares
+    edges = []   # List to store the edges (spying relationships)
+
+    # Process each line of shareholder information
+    for i, line in enumerate(lines[1:], start=0):  # Start with index 0 for shares
+        data = line.strip().split()
+        shares.append(int(data[0]))  # First number is the number of shares
+
+        # Second number, if present, indicates the shareholder being spied on
+        if len(data) > 1:
+            spied_on = int(data[1]) - 1  # Convert to 0-based index
+            edges.append((i, spied_on))  # Add the edge (i -> spied_on)
+
+    return shares, edges
+
+
+def write_output_to_file(file_path: str, output: tuple)-> None:
+    """
+    Writes the output (maximum shares and selected shareholders) to a file.
+
+    Parameters:
+        file_path (str): Path to the output file.
+        output (tuple): A tuple containing the maximum shares and the list of selected shareholders.
+                        Format: (max_shares, selected_shareholders)
+
+    Returns:
+        None
+    """
+    max_shares, selected_shareholders = output
+    with open(file_path, 'w') as file:
+        file.write(f"Maximum Shares: {max_shares}\n")
+        file.write(f"Selected Shareholders: {selected_shareholders}\n")
+
+
 def main():
     """Main function to test the shares problem implementation."""
     # Example usage
     shares = [10, 20, 30, 40, 50, 60]
     edges = [(1, 0), (2, 0), (3, 2), (4, 2), (5, 4)]
     print(find_max_shares(shares, edges)) # Result: (120, [1, 3, 5])
-
+    
     # Another example
     shares = [10, 20, 30, 40, 50, 60, 70]
     edges = [(1, 0), (2, 3), (3, 4), (4, 5), (5, 2), (6, 2)]
@@ -367,6 +417,15 @@ def main():
     shares = [10, 20, 30, 40, 50, 60, 70, 80, 90]
     edges = [(1, 0), (2, 3), (3, 4), (4, 5), (5, 2), (6, 2), (7, 6), (8, 6)]
     print(find_max_shares(shares, edges)) # Result: (290, [1, 3, 5, 7, 8])
+    
+    # Read input from a file
+    shares, edges = read_input_from_file("input.txt")
+    print(f'Shares: {shares}')
+    print(f'Edges: {edges}')
+    print(find_max_shares(shares, edges))
+
+    # Write output to a file
+    write_output_to_file("output.txt", find_max_shares(shares, edges))
 
 
 if __name__ == "__main__":
