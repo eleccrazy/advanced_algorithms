@@ -1,6 +1,5 @@
 # Exclude specific files
-output.txt
-input.txt
+*.txt
 
 # Exclude Python cache files and directories
 __pycache__/
