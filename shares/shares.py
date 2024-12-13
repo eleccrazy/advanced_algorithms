@@ -87,6 +87,10 @@ def process_tree_component(tree: list, graph: dict, shares: list) -> tuple:
     Returns:
         tuple: Maximum shares and the list of selected shareholders.
     """
+    # Check if the tree is empty
+    if not tree:
+        return 0, []
+    
     # DP arrays: dp[node][0] = max shares if node is not included
     #            dp[node][1] = max shares if node is included
     dp = {node: [0, 0] for node in tree}
@@ -330,8 +334,15 @@ def find_max_shares(shares: list, edges: list) -> tuple:
     Returns:
         tuple: Maximum shares that can be selected and the list of selected shareholders.
     """
+    # Check if there is only one shareholder
+    if len(shares) == 1:
+        return shares[0], [1]
     graph = build_graph(edges)
     components = find_wccs(graph)
+    # Check if the graph is valid (no cycles if there is only one component)
+    if len(components) == 1 and detect_cycle(components[0], graph):
+        # Raise an error if the graph has a cycle
+        raise ValueError("Invalid spying relationships: There must be one shareholder without spying.")
     total_max_shares = 0
     selected_shareholders = []
 
@@ -402,28 +413,9 @@ def write_output_to_file(file_path: str, output: tuple)-> None:
 
 
 def main():
-    """Main function to test the shares problem implementation."""
-    # Example usage
-    shares = [10, 20, 30, 40, 50, 60]
-    edges = [(1, 0), (2, 0), (3, 2), (4, 2), (5, 4)]
-    print(find_max_shares(shares, edges)) # Result: (120, [1, 3, 5])
-    
-    # Another example
-    shares = [10, 20, 30, 40, 50, 60, 70]
-    edges = [(1, 0), (2, 3), (3, 4), (4, 5), (5, 2), (6, 2)]
-    print(find_max_shares(shares, edges)) # Result: (190, [1, 3, 5, 6])
-
-    # Another example
-    shares = [10, 20, 30, 40, 50, 60, 70, 80, 90]
-    edges = [(1, 0), (2, 3), (3, 4), (4, 5), (5, 2), (6, 2), (7, 6), (8, 6)]
-    print(find_max_shares(shares, edges)) # Result: (290, [1, 3, 5, 7, 8])
-    
+    """Main function to test the shares problem implementation."""    
     # Read input from a file
     shares, edges = read_input_from_file("input.txt")
-    print(f'Shares: {shares}')
-    print(f'Edges: {edges}')
-    print(find_max_shares(shares, edges))
-
     # Write output to a file
     write_output_to_file("output.txt", find_max_shares(shares, edges))
 
