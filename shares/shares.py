@@ -458,7 +458,7 @@ def main():
     input_file = "input.txt"
     try:
         validate_input(input_file)
-        shares, edges = read_input_from_file("input.txt")
+        shares, edges = read_input_from_file(input_file)
         # Write output to a file
         write_output_to_file("output.txt", find_max_shares(shares, edges))
     except ValueError as e:
