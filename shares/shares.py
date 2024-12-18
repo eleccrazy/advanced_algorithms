@@ -412,12 +412,57 @@ def write_output_to_file(file_path: str, output: tuple)-> None:
         file.write(f"Selected Shareholders: {selected_shareholders}\n")
 
 
+def validate_input(file_path: str) -> bool:
+    """
+    Validates the input file for the Shares Problem.
+    Enforces:
+      1. Only the first shareholder can be the root (without spying).
+      2. All other shareholders must have exactly one valid "spying on" relationship.
+      3. Spying targets must be within the valid range [1, n].
+    
+    Parameters:
+        file_path (str): Path to the input file.
+
+    Returns:
+        bool: True if valid; raises ValueError otherwise.
+    """
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    n = int(lines[0].strip())  # Number of shareholders
+    if n < 1:
+        raise ValueError("Invalid input: Number of shareholders must be at least 1.")
+
+    # Validate the first shareholder (root)
+    first_line = lines[1].strip().split()
+    if len(first_line) != 1:
+        raise ValueError("Invalid input: Only the first shareholder (node 1) can be the root without spying.")
+
+    # Validate all other shareholders
+    for i, line in enumerate(lines[2:], start=2):  # Start checking from the second shareholder
+        parts = line.strip().split()
+        if len(parts) != 2:
+            raise ValueError(f"Invalid input: Shareholder {i} must spy on exactly one other shareholder.")
+        
+        target = int(parts[1])
+        if target < 1 or target > n:
+            raise ValueError(f"Invalid input: Shareholder {i} spies on non-existent shareholder {target}.")
+        
+    return True
+
+
 def main():
-    """Main function to test the shares problem implementation."""    
+    """Main function to test the shares problem implementation."""
     # Read input from a file
-    shares, edges = read_input_from_file("input.txt")
-    # Write output to a file
-    write_output_to_file("output.txt", find_max_shares(shares, edges))
+    # Validate the input file
+    input_file = "input.txt"
+    try:
+        validate_input(input_file)
+        shares, edges = read_input_from_file("input.txt")
+        # Write output to a file
+        write_output_to_file("output.txt", find_max_shares(shares, edges))
+    except ValueError as e:
+        print(f"Error: {e}")
 
 
 if __name__ == "__main__":
