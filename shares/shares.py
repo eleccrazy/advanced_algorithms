@@ -3,6 +3,8 @@ This module contains the implementation of the shares problem.
 Author: Gizachew Bayness Kassa
 """
 from collections import defaultdict
+import sys
+import os
 
 
 def build_graph(edges: list) -> dict:
@@ -191,7 +193,6 @@ def process_cycle_component(component: list, graph: dict, shares: list) -> tuple
         component (list): List of nodes in the cycle component.
         graph (dict): Adjacency list representation of the directed graph.
         shares (list): List of integers representing the shares.
-
     Returns:
         tuple: Maximum shares and the list of selected shareholders.
     """
@@ -373,8 +374,7 @@ def read_input_from_file(file_path: str) -> tuple:
         tuple: A list of shares and a list of edges.
     """
     with open(file_path, 'r') as file:
-        lines = file.readlines()
-
+            lines = file.readlines()
     # First line contains the number of shareholders (not directly used here)
     n = int(lines[0].strip())
 
@@ -426,6 +426,8 @@ def validate_input(file_path: str) -> bool:
     Returns:
         bool: True if valid; raises ValueError otherwise.
     """
+    if not os.path.exists(file_path):
+        raise ValueError("Invalid input: File does not exist.")
     with open(file_path, 'r') as file:
         lines = file.readlines()
 
@@ -451,18 +453,40 @@ def validate_input(file_path: str) -> bool:
     return True
 
 
+def read_filenames_from_console() -> tuple:
+    """
+    Read input and output filenames from the console.
+
+    Returns:
+        tuple: Input filename and output filename.
+    """
+    input_file = input("Enter the input filename: ")
+    output_file = input("Enter the output filename: ")
+
+    # Check input file and output file are of txt format
+    if not input_file.endswith(".txt") or not output_file.endswith(".txt"):
+        raise ValueError("Input and output files must be of .txt format.")
+
+    return input_file, output_file
+
+
 def main():
     """Main function to test the shares problem implementation."""
-    # Read input from a file
-    # Validate the input file
-    input_file = "input.txt"
+    # Read input and output filenames from the command line
     try:
-        validate_input(input_file)
-        shares, edges = read_input_from_file(input_file)
-        # Write output to a file
-        write_output_to_file("output.txt", find_max_shares(shares, edges))
+        input_file, output_file = read_filenames_from_console()
+        # Read input from a file
+        # Validate the input file
+        try:
+            validate_input(input_file)
+            shares, edges = read_input_from_file(input_file)
+            # Write output to a file
+            write_output_to_file(output_file, find_max_shares(shares, edges))
+        except ValueError as e:
+            print(f"Error: {e}")
     except ValueError as e:
         print(f"Error: {e}")
+        return
 
 
 if __name__ == "__main__":
