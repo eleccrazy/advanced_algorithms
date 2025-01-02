@@ -424,6 +424,8 @@ def write_output_to_file(file_path: str, output: tuple)-> None:
         file.write(f"Selected Shareholders: {selected_shareholders}\n")
 
 
+import os
+
 def validate_input(file_path: str) -> bool:
     """
     Validates the input file for the Shares Problem.
@@ -440,28 +442,56 @@ def validate_input(file_path: str) -> bool:
     """
     if not os.path.exists(file_path):
         raise ValueError("Invalid input: File does not exist.")
+
     with open(file_path, 'r') as file:
         lines = file.readlines()
 
-    n = int(lines[0].strip())  # Number of shareholders
+    # Check for empty file
+    if not lines:
+        raise ValueError("Invalid input: The file is empty.")
+
+    try:
+        n = int(lines[0].strip())  # Number of shareholders
+    except ValueError:
+        raise ValueError("Invalid input: The first line must contain a positive integer.")
+
     if n < 1:
         raise ValueError("Invalid input: Number of shareholders must be at least 1.")
 
     # Validate the first shareholder (root)
+    if len(lines) < 2:
+        raise ValueError("Invalid input: Missing data for the first shareholder.")
+    
     first_line = lines[1].strip().split()
     if len(first_line) != 1:
         raise ValueError("Invalid input: Only the first shareholder (node 1) can be the root without spying.")
 
+    try:
+        int(first_line[0])  # Ensure the root's shares are a valid integer
+    except ValueError:
+        raise ValueError("Invalid input: Shares for the root shareholder must be a positive integer.")
+
     # Validate all other shareholders
+    if len(lines) != n + 1:
+        raise ValueError(f"Invalid input: Expected {n} shareholder entries, but found {len(lines) - 1}.")
+
     for i, line in enumerate(lines[2:], start=2):  # Start checking from the second shareholder
         parts = line.strip().split()
         if len(parts) != 2:
             raise ValueError(f"Invalid input: Shareholder {i} must spy on exactly one other shareholder.")
-        
-        target = int(parts[1])
+
+        try:
+            shares = int(parts[0])
+            target = int(parts[1])
+        except ValueError:
+            raise ValueError(f"Invalid input: Shareholder {i} must have valid integer shares and a valid target.")
+
+        if shares < 0:
+            raise ValueError(f"Invalid input: Shareholder {i} has negative shares.")
+
         if target < 1 or target > n:
             raise ValueError(f"Invalid input: Shareholder {i} spies on non-existent shareholder {target}.")
-        
+    
     return True
 
 
