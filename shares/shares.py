@@ -512,6 +512,48 @@ def read_filenames_from_console() -> tuple:
     return input_file, output_file
 
 
+def visualize_graph(edges, shares, selected_nodes):
+    """
+    Visualize the graph of shareholders and highlight the selected shareholders.
+
+    Parameters:
+        edges (list): List of edges representing "spying on" relationships.
+        shares (list): List of shares for each node.
+        selected_nodes (list): List of selected shareholders (1-based index).
+    """
+    # Create a directed graph
+    G = nx.DiGraph()
+    
+    # Add nodes with their share values as labels
+    for i, share in enumerate(shares, start=1):  # 1-based indexing
+        G.add_node(i, label=f"Node {i}\nShares: {share}")
+
+    # Add edges
+    for u, v in edges:
+        G.add_edge(u + 1, v + 1)  # Convert to 1-based indexing
+
+    # Define node colors: Highlight selected nodes
+    node_colors = ["green" if node in selected_nodes else "lightblue" for node in G.nodes]
+
+    # Draw the graph
+    pos = nx.spring_layout(G)  # Layout for better visualization
+    nx.draw(G, pos, with_labels=True, node_color=node_colors, node_size=2000, font_size=10)
+    
+    # Add labels for nodes
+    labels = nx.get_node_attributes(G, 'label')
+    nx.draw_networkx_labels(G, pos, labels, font_size=8, verticalalignment="bottom")
+
+    # Add a legend
+    plt.legend(handles=[
+        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='Selected Shareholders'),
+        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='lightblue', markersize=10, label='Unselected Shareholders')
+    ], loc="upper left")
+
+    # Display the graph
+    plt.title("Shares Problem: Graph Visualization")
+    plt.show()
+
+
 def main():
     """Main function to test the shares problem implementation."""
     try:
@@ -528,7 +570,7 @@ def main():
             write_output_to_file(output_file, (max_shares, selected_nodes))
 
             # Visualize the graph
-            # visualize_graph(edges, shares, selected_nodes)
+            visualize_graph(edges, shares, selected_nodes)
         except ValueError as e:
             print(f"Error: {e}")
     except ValueError as e:
