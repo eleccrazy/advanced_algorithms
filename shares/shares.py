@@ -512,9 +512,13 @@ def read_filenames_from_console() -> tuple:
     return input_file, output_file
 
 
+import matplotlib.pyplot as plt
+import networkx as nx
+
 def visualize_graph(edges, shares, selected_nodes):
     """
-    Visualize the graph of shareholders and highlight the selected shareholders.
+    Visualize the graph of shareholders and highlight the selected shareholders,
+    separating components for better clarity.
 
     Parameters:
         edges (list): List of edges representing "spying on" relationships.
@@ -523,7 +527,7 @@ def visualize_graph(edges, shares, selected_nodes):
     """
     # Create a directed graph
     G = nx.DiGraph()
-    
+
     # Add nodes with their share values as labels
     for i, share in enumerate(shares, start=1):  # 1-based indexing
         G.add_node(i, label=f"Node {i}\nShares: {share}")
@@ -535,13 +539,27 @@ def visualize_graph(edges, shares, selected_nodes):
     # Define node colors: Highlight selected nodes
     node_colors = ["green" if node in selected_nodes else "lightblue" for node in G.nodes]
 
+    # Find weakly connected components
+    components = list(nx.weakly_connected_components(G))
+    pos = {}  # Store positions for all nodes
+    x_offset = 0  # To separate components horizontally
+
+    # Generate positions for each component
+    for component in components:
+        subgraph = G.subgraph(component)
+        component_pos = nx.spring_layout(subgraph)  # Generate positions for the component
+        # Adjust positions to avoid overlap
+        for node in component_pos:
+            component_pos[node][0] += x_offset
+        pos.update(component_pos)
+        x_offset += 2  # Increase offset for the next component
+
     # Draw the graph
-    pos = nx.spring_layout(G)  # Layout for better visualization
-    nx.draw(G, pos, with_labels=True, node_color=node_colors, node_size=2000, font_size=10)
-    
-    # Add labels for nodes
+    nx.draw(G, pos, with_labels=False, node_color=node_colors, node_size=1500, edge_color="gray", font_size=10)
+
+    # Add labels for nodes with bounding boxes
     labels = nx.get_node_attributes(G, 'label')
-    nx.draw_networkx_labels(G, pos, labels, font_size=8, verticalalignment="bottom")
+    nx.draw_networkx_labels(G, pos, labels, font_size=8, bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.3"))
 
     # Add a legend
     plt.legend(handles=[
@@ -550,8 +568,9 @@ def visualize_graph(edges, shares, selected_nodes):
     ], loc="upper left")
 
     # Display the graph
-    plt.title("Shares Problem: Graph Visualization")
+    plt.title("Shares Problem: Graph Visualization with Separated Components")
     plt.show()
+
 
 
 def main():
