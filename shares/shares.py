@@ -3,8 +3,9 @@ This module contains the implementation of the shares problem.
 Author: Gizachew Bayness Kassa
 """
 from collections import defaultdict
-import sys
 import os
+import matplotlib.pyplot as plt
+import networkx as nx
 
 
 def build_graph(edges: list) -> dict:
@@ -233,24 +234,35 @@ def detect_cycle_nodes(component: list, graph: dict) -> list:
         list: List of nodes that are part of the cycle.
     """
     visited = set()
-    stack = set()
+    stack = []
     cycle_nodes = set()
 
     def dfs(node, parent):
+        if node in visited:
+            return False
         visited.add(node)
-        stack.add(node)
+        stack.append(node)
+
         for neighbor in graph[node]:
-            if neighbor in component:
-                if neighbor not in visited:
-                    dfs(neighbor, node)
-                elif neighbor != parent and neighbor in stack:
-                    cycle_nodes.update(stack)
-        stack.remove(node)
+            if neighbor not in component:
+                continue
+            if neighbor == parent:
+                continue
+            if neighbor in stack:
+                # A cycle is detected, collect only nodes in the cycle
+                cycle_start_index = stack.index(neighbor)
+                cycle_nodes.update(stack[cycle_start_index:])
+                return True
+            if dfs(neighbor, node):
+                return True
+        
+        stack.pop()
+        return False
 
     for node in component:
         if node not in visited:
-            dfs(node, None)
-
+            if dfs(node, None):
+                break
     return list(cycle_nodes)
 
 
@@ -355,10 +367,10 @@ def find_max_shares(shares: list, edges: list) -> tuple:
 
         total_max_shares += max_shares
         selected_shareholders.extend(shareholders)
-
-        selected_shareholders.sort() # Sort the selected shareholders
-        # Convert the selected shareholders to 1-based indexing
-        selected_shareholders = [shareholder + 1 for shareholder in selected_shareholders]
+        
+    selected_shareholders.sort() # Sort the selected shareholders
+    # Convert the selected shareholders to 1-based indexing
+    selected_shareholders = [shareholder + 1 for shareholder in selected_shareholders]
 
     return total_max_shares, selected_shareholders
 
@@ -472,16 +484,21 @@ def read_filenames_from_console() -> tuple:
 
 def main():
     """Main function to test the shares problem implementation."""
-    # Read input and output filenames from the command line
     try:
+        # Read input and output filenames from the command line
         input_file, output_file = read_filenames_from_console()
         # Read input from a file
         # Validate the input file
         try:
             validate_input(input_file)
             shares, edges = read_input_from_file(input_file)
+
+            max_shares, selected_nodes = find_max_shares(shares, edges)
             # Write output to a file
-            write_output_to_file(output_file, find_max_shares(shares, edges))
+            write_output_to_file(output_file, (max_shares, selected_nodes))
+
+            # Visualize the graph
+            # visualize_graph(edges, shares, selected_nodes)
         except ValueError as e:
             print(f"Error: {e}")
     except ValueError as e:
