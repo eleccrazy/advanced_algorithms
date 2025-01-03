@@ -424,8 +424,6 @@ def write_output_to_file(file_path: str, output: tuple)-> None:
         file.write(f"Selected Shareholders: {selected_shareholders}\n")
 
 
-import os
-
 def validate_input(file_path: str) -> bool:
     """
     Validates the input file for the Shares Problem.
@@ -512,9 +510,6 @@ def read_filenames_from_console() -> tuple:
     return input_file, output_file
 
 
-import matplotlib.pyplot as plt
-import networkx as nx
-
 def visualize_graph(edges, shares, selected_nodes):
     """
     Visualize the graph of shareholders and highlight the selected shareholders,
@@ -525,6 +520,9 @@ def visualize_graph(edges, shares, selected_nodes):
         shares (list): List of shares for each node.
         selected_nodes (list): List of selected shareholders (1-based index).
     """
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
     # Create a directed graph
     G = nx.DiGraph()
 
@@ -554,6 +552,9 @@ def visualize_graph(edges, shares, selected_nodes):
         pos.update(component_pos)
         x_offset += 2  # Increase offset for the next component
 
+    # Set up the plot figure size
+    plt.figure(figsize=(12, 8))
+
     # Draw the graph
     nx.draw(G, pos, with_labels=False, node_color=node_colors, node_size=1500, edge_color="gray", font_size=10)
 
@@ -561,16 +562,18 @@ def visualize_graph(edges, shares, selected_nodes):
     labels = nx.get_node_attributes(G, 'label')
     nx.draw_networkx_labels(G, pos, labels, font_size=8, bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.3"))
 
-    # Add a legend
+    # Add a legend and move it to a corner
     plt.legend(handles=[
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='Selected Shareholders'),
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='lightblue', markersize=10, label='Unselected Shareholders')
-    ], loc="upper left")
+    ], loc="upper right", bbox_to_anchor=(1.1, 1.05))  # Place legend outside the graph area
+
+    # Manually adjust layout margins
+    plt.subplots_adjust(left=0.1, right=0.85, top=0.9, bottom=0.1)
 
     # Display the graph
     plt.title("Shares Problem: Graph Visualization with Separated Components")
     plt.show()
-
 
 
 def main():
@@ -587,9 +590,12 @@ def main():
             max_shares, selected_nodes = find_max_shares(shares, edges)
             # Write output to a file
             write_output_to_file(output_file, (max_shares, selected_nodes))
-
-            # Visualize the graph
-            visualize_graph(edges, shares, selected_nodes)
+            print('Output written to', output_file)
+            # Visualize the graph (optional)
+            # Prompt the user to visualize the graph
+            visualize = input("Do you want to visualize the graph? (y/n): ")
+            if visualize.lower() == "y":
+                visualize_graph(edges, shares, selected_nodes)
         except ValueError as e:
             print(f"Error: {e}")
     except ValueError as e:
