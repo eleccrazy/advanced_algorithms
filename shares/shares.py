@@ -358,7 +358,6 @@ def find_max_shares(shares: list, edges: list) -> tuple:
         raise ValueError("Invalid spying relationships: There must be one shareholder without spying.")
     total_max_shares = 0
     selected_shareholders = []
-
     for component in components:
         if detect_cycle(component, graph):
             max_shares, shareholders = process_cycle_component(component, graph, shares)
@@ -367,7 +366,6 @@ def find_max_shares(shares: list, edges: list) -> tuple:
 
         total_max_shares += max_shares
         selected_shareholders.extend(shareholders)
-        
     selected_shareholders.sort() # Sort the selected shareholders
     # Convert the selected shareholders to 1-based indexing
     selected_shareholders = [shareholder + 1 for shareholder in selected_shareholders]

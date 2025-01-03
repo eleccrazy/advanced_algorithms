@@ -37,8 +37,6 @@ def generate_input_file(file_path: str, n: int, share_range: tuple):
             spied_on = [v for u, v in edges if u == i + 1][0]  # Find the target node
             file.write(f"{share} {spied_on}\n")
 
-    print(f"Input file generated at: {file_path}")
-
 
 if __name__ == "__main__":
     print("=== Shares Problem Input File Generator ===")
