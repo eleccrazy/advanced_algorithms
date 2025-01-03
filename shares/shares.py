@@ -520,9 +520,6 @@ def visualize_graph(edges, shares, selected_nodes):
         shares (list): List of shares for each node.
         selected_nodes (list): List of selected shareholders (1-based index).
     """
-    import matplotlib.pyplot as plt
-    import networkx as nx
-
     # Create a directed graph
     G = nx.DiGraph()
 
