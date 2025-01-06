@@ -1,7 +1,14 @@
 # Exclude specific files
 *.txt
+# Include specific txt files
+!input3.txt
+!input4.txt
+!input.txt
+!input1.txt
+!input7.txt
 
 # Exclude Python cache files and directories
 __pycache__/
 *.py[cod]
 .pytest_cache/
+shares1.py
