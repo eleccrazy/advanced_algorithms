@@ -231,40 +231,60 @@ def detect_cycle_nodes(component: list, graph: dict) -> list:
     Returns:
         list: List of nodes that are part of the cycle.
     """
-    visited = set()
-    stack = []
-    cycle_nodes = set()
+    def detect_large_cycle_nodes(component, graph):
+        """
+        Detect cycle nodes for cycles with more than two nodes.
+        """
+        visited = set()
+        stack = []
+        cycle_nodes = set()
 
-    # Check if the nodes in the component are less than 3
-    if len(component) < 3:
-        return component
-    def dfs(node, parent):
-        if node in visited:
+        def dfs(node, parent):
+            if node in visited:
+                return False
+            visited.add(node)
+            stack.append(node)
+
+            for neighbor in graph[node]:
+                if neighbor not in component:
+                    continue
+                if neighbor == parent:
+                    continue
+                if neighbor in stack:
+                    # A cycle is detected, collect only nodes in the cycle
+                    cycle_start_index = stack.index(neighbor)
+                    cycle_nodes.update(stack[cycle_start_index:])
+                    return True
+                if dfs(neighbor, node):
+                    return True
+            
+            stack.pop()
             return False
-        visited.add(node)
-        stack.append(node)
 
-        for neighbor in graph[node]:
-            if neighbor not in component:
-                continue
-            if neighbor == parent:
-                continue
-            if neighbor in stack:
-                # A cycle is detected, collect only nodes in the cycle
-                cycle_start_index = stack.index(neighbor)
-                cycle_nodes.update(stack[cycle_start_index:])
-                return True
-            if dfs(neighbor, node):
-                return True
-        
-        stack.pop()
-        return False
+        for node in component:
+            if node not in visited:
+                if dfs(node, None):
+                    break
+        return list(cycle_nodes)
 
-    for node in component:
-        if node not in visited:
-            if dfs(node, None):
-                break
-    return list(cycle_nodes)
+    def detect_two_node_cycle_nodes(component, graph):
+        """
+        Detect cycle nodes for cycles with exactly two nodes.
+        """
+        for node in component:
+            for neighbor in graph[node]:
+                if neighbor in component and graph[neighbor].count(node) > 0:
+                    return [node, neighbor]
+        return []
+
+    # Try detecting large cycles
+    cycle_nodes = detect_large_cycle_nodes(component, graph)
+
+    # If no large cycle detected, try detecting two-node cycles
+    if not cycle_nodes:
+        cycle_nodes = detect_two_node_cycle_nodes(component, graph)
+
+    return cycle_nodes
 
 
 def remove_node_and_neighbors(node: int, component: list, graph: dict) -> list:
@@ -582,7 +602,7 @@ def main():
         try:
             validate_input(input_file)
             shares, edges = read_input_from_file(input_file)
-
+            
             max_shares, selected_nodes = find_max_shares(shares, edges)
             # Write output to a file
             write_output_to_file(output_file, (max_shares, selected_nodes))
