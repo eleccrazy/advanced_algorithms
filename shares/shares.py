@@ -421,6 +421,19 @@ def read_input_from_file(file_path: str) -> tuple:
         if len(data) > 1:
             spied_on = int(data[1]) - 1  # Convert to 0-based index
             edges.append((i, spied_on))  # Add the edge (i -> spied_on)
+    if len(shares) > len(edges):
+        # Identify the shareholder who is not included in any edge
+        involved_shareholders = set()
+        for u, v in edges:
+            involved_shareholders.add(u)
+            involved_shareholders.add(v)
+
+        # Find the shareholder not involved in any edge
+        for i in range(len(shares)):
+            if i not in involved_shareholders:
+                # Add the isolated shareholder with -1 to indicate no spying
+                edges.append((i, -1))
+                break  # Only one should exist by the problem constraints
 
     return shares, edges
 
@@ -539,6 +552,8 @@ def visualize_graph(edges, shares, selected_nodes):
         shares (list): List of shares for each node.
         selected_nodes (list): List of selected shareholders (1-based index).
     """
+    # Remove -1 if present in the edges
+    edges = [(u, v) for u, v in edges if v != -1]
     # Create a directed graph
     G = nx.DiGraph()
 
