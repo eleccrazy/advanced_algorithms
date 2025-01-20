@@ -182,7 +182,9 @@ def process_tree_component(tree: list, graph: dict, shares: list) -> tuple:
     # Gather the selected shareholders
     selected_shareholders = [node for node in tree if included[node]]
 
-    return max_shares, selected_shareholders
+    actual_max_shares = sum(shares[node] for node in selected_shareholders)
+
+    return actual_max_shares, selected_shareholders
 
 
 def process_cycle_component(component: list, graph: dict, shares: list) -> tuple:
@@ -212,7 +214,7 @@ def process_cycle_component(component: list, graph: dict, shares: list) -> tuple
     # Configuration 2: Exclude the representative node
     forest_exclude = remove_node(representative_node, component)
     max_exclude, shareholders_exclude = process_forest(forest_exclude, graph, shares)
-
+    
     # Compare results
     if max_include > max_exclude:
         return max_include, shareholders_include
