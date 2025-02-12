@@ -182,9 +182,7 @@ def process_tree_component(tree: list, graph: dict, shares: list) -> tuple:
     # Gather the selected shareholders
     selected_shareholders = [node for node in tree if included[node]]
 
-    actual_max_shares = sum(shares[node] for node in selected_shareholders)
-
-    return actual_max_shares, selected_shareholders
+    return max_shares, selected_shareholders
 
 
 def process_cycle_component(component: list, graph: dict, shares: list) -> tuple:
@@ -200,6 +198,13 @@ def process_cycle_component(component: list, graph: dict, shares: list) -> tuple
     """
     # Step 1: Detect cycle nodes
     cycle_nodes = detect_cycle_nodes(component, graph)
+    if len(cycle_nodes) == 2:
+        # Special case: Two-node cycle
+        # Process the entire component as a tree and return the result
+        # Iterate over the graph and remove any duplicate values for each node
+        for node in component:
+            graph[node] = list(set(graph[node]))
+        return process_tree_component(component, graph, shares)
     # Step 2: Choose a representative node
     representative_node = cycle_nodes[0]
 
